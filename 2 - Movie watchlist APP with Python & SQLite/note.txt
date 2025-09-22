@@ -1,0 +1,67 @@
+project feature:
+- keep track of movies that user is interested in and their release date
+- store which movies the user has already watched
+- add new users to keep track of their watched movies separately
+
+3 stages of the project:
+- table for 1 user to record seen and unseen movies info
+- tables for 2 users
+- 3 tables storing movie and user info in their own tables
+    the watched table only references the other tables
+
+Normalization
+
+foreign key inconsistency
+- adding a foreign key inconsistency will enforce constraint in PostgreSQL or SQLite with foreign key support
+- example code in SQLite:
+CREATE TABLE employees (
+    id INTEGER PRIMARY KEY,
+    first_name TEXT,
+    surname TEXT,
+    department_id INTEGER,
+    FOREIGN KEY (department_id) REFERENCES departments(id)
+);
+
+phase2 problem:
+- marking a movie as watched removies it from movies table
+- can't distinguish between 2 users with the same user name
+
+incremental id
+- when create a INTEGER PRIMARY KEY column in SQLite, it is autoincrementing
+- in PostgreSQL, we will specify this behaviour by ourselves
+
+why SQLite has autoincrementing ids:
+- all SQLite tables have a hidden column called rowid
+- rowid is autoincrementing
+- when create an INTEGER PRIMARY KEY column, it becomes an alias for rowid
+- there is no performance loss in creating a INTEGER PRIMARY key
+    because it uses the value that was generating anyway
+
+SQLite might reuse rowid, PostgreSQL autoincrementing values only go up
+- reusing rowid might be dangerous, because reusing deleted values can cause mismatch
+- SQLite can only increase rowid to avoid reusing by:
+INTEGER PRIMARY KEY AUTOINCREMENT
+- requires computing power in SQLite
+
+INDEX
+- an index is associated with a column, speeding up filtering and sorting operations
+    like WHERE, ORDER BY, ON
+- with index, you need log(n) jumps
+- but it slows down writing to the table
+- the databse builds a B-tree for us when we create an index
+- every time we insert a row, the index needs to be kept updated and branched moved
+    so they are the same length
+- an index is a table, more disk space will be needed to store it
+- normally you add an index when queries are taking very long to speed up
+    don't add indexes everywhere, becase it is a waste of processing power and disc space
+- example code:
+CREATE INDEX idx_movie_release ON movies(release_timestamp);
+- when you create a primary key, it will automacially create index
+
+REFLECTIOIN ON THIS PROJECT:
+1 - for the 7 - Watch a movies, it requires user to enter Movie ID instead of Movie name
+    but normally users do not know ID, they only know the title of movies that they have seen
+    it is better to search according to the user's input to get movie id
+    if the title is not in the movie table, add the movie in the movies table and also in the watched table
+2 - inserting a non-existing movie id and user name in the watched table will cause problem
+    it is better to have validation rule that the id and user name inserted really exist
